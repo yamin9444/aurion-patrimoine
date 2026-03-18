@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion Patrimoine — Simulateur PER & Comparateur de placements 2026</title>
+<meta name="description" content="Simulez votre économie fiscale PER et comparez les placements — Aurion Patrimoine, conseil en gestion de patrimoine.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ap: #02539d;
+    --ap-l: rgba(2,83,157,0.09);
+    --ap-b: rgba(2,83,157,0.28);
+    --black: #000;
+    --white: #fff;
+    --bg: #f5f5f3;
+    --bg2: #fff;
+    --bg3: #f0f0ee;
+    --text: #1a1a1a;
+    --text2: #555;
+    --text3: #888;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --green: #1D9E75;
+    --amber: #BA7517;
+    --red: #E24B4A;
+    --gray: #888780;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--black);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .nav-logo svg { width: 36px; height: 36px; flex-shrink: 0; }
+  .nav-name { color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0.04em; }
+  .nav-sub { color: rgba(255,255,255,0.3); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; display: block; margin-top: 1px; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 7px 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    font-family: inherit;
+  }
+  .nav-tab:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+  .nav-tab.active { background: var(--ap); color: #fff; border-color: var(--ap); }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--black);
+    padding: 48px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(2,83,157,0.25);
+    border: 0.5px solid rgba(2,83,157,0.5);
+    color: #5aafff;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+  .hero h1 { color: #fff; font-size: clamp(22px, 5vw, 36px); font-weight: 600; margin-bottom: 10px; line-height: 1.2; }
+  .hero p { color: rgba(255,255,255,0.45); font-size: 14px; max-width: 500px; margin: 0 auto; }
+
+  /* ── LAYOUT ── */
+  .page { display: none; padding: 24px 16px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg3);
+  }
+  .card-header h2 { font-size: 13px; font-weight: 600; color: var(--text); }
+  .card-header p { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .card-body { padding: 20px; }
+  .sec-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ap);
+    border-left: 2px solid var(--ap);
+    padding-left: 8px;
+    margin-bottom: 16px;
+  }
+
+  /* ── INPUTS ── */
+  .field { margin-bottom: 18px; }
+  .field-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .field-label { font-size: 12px; color: var(--text2); }
+  .field-value { font-size: 13px; font-weight: 600; color: var(--ap); }
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(2,83,157,0.15);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--ap);
+    box-shadow: 0 0 0 3px rgba(2,83,157,0.2);
+    transition: box-shadow 0.2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px rgba(2,83,157,0.2); }
+  .field-hint { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  select:focus { border-color: var(--ap); }
+
+  /* ── GRIDS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media(max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr 1fr; } }
+  @media(max-width: 400px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+
+  /* ── STAT CARDS ── */
+  .stat-card {
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .stat-card.accent { border-top: 2px solid var(--ap); }
+  .stat-card.accent-green { border-top: 2px solid var(--green); }
+  .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text3); margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 600; color: var(--text); }
+  .stat-value.blue { color: var(--ap); }
+  .stat-value.green { color: var(--green); }
+  .stat-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* ── HIGHLIGHT ── */
+  .highlight {
+    background: var(--black);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--ap);
+  }
+  .hl-label { color: rgba(255,255,255,0.4); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 8px; }
+  .hl-value { color: #fff; font-size: 34px; font-weight: 700; line-height: 1; }
+  .hl-sub { color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 6px; }
+
+  /* ── ALERT ── */
+  .alert {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .alert.warn { background: #FFF8E6; border: 0.5px solid #F0C940; color: #7A5800; }
+  .alert.info { background: #EBF4FF; border: 0.5px solid #90C3F5; color: #0A3D6B; }
+  .alert.danger { background: #FEF2F2; border: 0.5px solid #FCA5A5; color: #7F1D1D; }
+  .alert.success { background: #F0FDF4; border: 0.5px solid #86EFAC; color: #14532D; }
+
+  /* ── BUTTON ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--ap); color: #fff; }
+  .btn-primary:hover { background: #0362b8; }
+  .btn-full { width: 100%; }
+  .btn-outline { background: transparent; color: var(--ap); border: 1.5px solid var(--ap); }
+  .btn-outline:hover { background: var(--ap-l); }
+
+  /* ── PROFILE TABS ── */
+  .profile-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ptab {
+    padding: 5px 12px;
+    font-size: 11px;
+    border: 0.5px solid var(--border2);
+    border-radius: 20px;
+    cursor: pointer;
+    color: var(--text2);
+    background: var(--bg2);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .ptab.active-blue { background: var(--ap); color: #fff; border-color: var(--ap); }
+  .ptab.active-green { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* ── PRODUCT CARDS ── */
+  .prod-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  @media(max-width: 620px) { .prod-cards { grid-template-columns: 1fr; } }
+  .prod-card { border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .prod-card.winner { border: 1.5px solid var(--ap); }
+  .prod-head { padding: 14px; }
+  .prod-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+  .prod-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .prod-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .prod-rate { font-size: 12px; font-weight: 600; margin-top: 5px; }
+  .winner-badge { display: inline-block; font-size: 9px; font-weight: 600; background: var(--ap); color: #fff; padding: 2px 8px; border-radius: 20px; margin-top: 4px; }
+  .prod-stats { padding: 10px 14px; border-top: 0.5px solid var(--border); }
+  .ps-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; }
+  .ps-lbl { font-size: 10px; color: var(--text3); }
+  .ps-val { font-size: 11px; font-weight: 600; color: var(--text); }
+  .ps-val.good { color: var(--green); }
+  .ps-val.warn { color: var(--amber); }
+  .ps-val.blue { color: var(--ap); }
+  .prod-big { padding: 12px 14px; border-top: 0.5px solid var(--border); background: var(--bg3); text-align: center; }
+  .pb-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text3); margin-bottom: 3px; }
+  .pb-val { font-size: 18px; font-weight: 700; }
+
+  /* ── CRITERIA ── */
+  .crit-table { width: 100%; }
+  .crit-head { display: grid; grid-template-columns: 130px 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .crit-head-lbl { font-size: 9px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.1em; }
+  .crit-row { display: grid; grid-template-columns: 130px 1fr 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 9px; }
+  @media(max-width: 500px) { .crit-head, .crit-row { grid-template-columns: 80px 1fr 1fr 1fr; gap: 5px; } }
+  .crit-name { font-size: 11px; color: var(--text2); }
+  .bar-wrap { display: flex; align-items: center; gap: 5px; }
+  .bar-track { flex: 1; height: 7px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .bar-num { font-size: 10px; font-weight: 600; min-width: 20px; text-align: right; }
+
+  /* ── ADVICE ── */
+  .adv-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media(max-width: 580px) { .adv-cards { grid-template-columns: 1fr; } }
+  .adv-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
+  .adv-card.priority { border-top: 2px solid var(--ap); }
+  .adv-prod { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .adv-pct { font-size: 22px; font-weight: 700; margin: 3px 0; }
+  .adv-pct-sub { font-size: 10px; color: var(--text3); margin-bottom: 6px; }
+  .adv-bar { height: 4px; background: var(--bg3); border-radius: 2px; margin-bottom: 8px; }
+  .adv-why { font-size: 11px; color: var(--text2); line-height: 1.5; }
+  .priority-badge { font-size: 9px; background: var(--ap); color: #fff; padding: 1px 7px; border-radius: 10px; font-weight: 600; margin-left: 5px; }
+
+  /* ── CTA BAND ── */
+  .cta-band {
+    background: var(--black);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .cta-band p { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; flex: 1; min-width: 200px; }
+  .cta-band .btn-primary { white-space: nowrap; }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer { font-size: 10px; color: var(--text3); text-align: center; margin-top: 12px; line-height: 1.6; padding: 0 8px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--black);
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    margin-top: 32px;
+    line-height: 1.7;
+  }
+  footer strong { color: rgba(255,255,255,0.6); }
+
+  /* ── CHART ── */
+  .chart-wrap { position: relative; width: 100%; height: 220px; }
+  .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── RING ── */
+  .ring-wrap { position: relative; width: 100px; height: 100px; margin: 0 auto 16px; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-pct { font-size: 20px; font-weight: 700; }
+  .ring-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* ── BUDGET BAR ── */
+  .budget-track { height: 10px; background: var(--bg3); border-radius: 5px; overflow: hidden; display: flex; margin: 8px 0; }
+  .budget-seg { height: 100%; transition: width 0.5s ease; }
+
+  /* ── STEPS ── */
+  .steps { display: flex; align-items: center; margin-bottom: 24px; }
+  .step-dot {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    border: 1.5px solid var(--border2);
+    color: var(--text3);
+    background: var(--bg2);
+    flex-shrink: 0;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .step-dot.active { background: var(--ap); color: #fff; border-color: var(--ap); }
+  .step-dot.done { background: var(--green); color: #fff; border-color: var(--green); }
+  .step-line { flex: 1; height: 1px; background: var(--border); }
+  .step-labels { display: flex; justify-content: space-between; margin-top: 6px; margin-bottom: 20px; }
+  .step-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; flex: 1; }
+  .step-lbl.active { color: var(--ap); font-weight: 600; }
+
+  /* ── CHARGE INPUTS ── */
+  .charge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  @media(max-width: 400px) { .charge-grid { grid-template-columns: 1fr; } }
+  .charge-item { background: var(--bg3); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .charge-item label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 5px; }
+  .charge-item input[type=number] {
+    width: 100%;
+    padding: 7px 10px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  .charge-item input[type=number]:focus { border-color: var(--ap); }
+
+  /* ── BTN ROW ── */
+  .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+  .btn-back { padding: 11px 18px; font-size: 13px; color: var(--text2); background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; }
+
+  .la-warn { background: #FFF8E6; border: 0.5px solid #F0C940; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 11px; color: #7A5800; line-height: 1.5; margin: 8px 14px 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <svg viewBox="0 0 80 80" fill="none">
+      <rect width="80" height="80" fill="#000"/>
+      <text x="12" y="52" font-family="Georgia,serif" font-size="40" fill="white">A</text>
+      <line x1="46" y1="16" x2="36" y2="64" stroke="white" stroke-width="1.8"/>
+      <text x="34" y="64" font-family="Georgia,serif" font-size="36" fill="white">P</text>
+    </svg>
+    <div>
+      <div class="nav-name">Aurion Patrimoine</div>
+      <span class="nav-sub">Conseil en gestion de patrimoine</span>
+    </div>
+  </a>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('per')">Simulateur PER</button>
+    <button class="nav-tab" onclick="showPage('comparateur')">Comparateur</button>
+    <button class="nav-tab" onclick="showPage('epargne')">Capacité épargne</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">
+    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#5aafff"/></svg>
+    Outils gratuits — Simulation indicative 2026
+  </div>
+  <h1>Vos outils patrimoniaux<br>en accès libre</h1>
+  <p>Simulez, comparez, estimez — sans engagement, sans inscription.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  PAGE 1 : SIMULATEUR PER                       -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page active" id="page-per">
+  <div style="max-width:900px;margin:0 auto;">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+
+      <!-- Inputs -->
+      <div>
+        <div class="card">
+          <div class="card-header"><h2>Votre situation</h2></div>
+          <div class="card-body">
+            <div class="field">
+              <div class="field-row"><span class="field-label">Revenu annuel net imposable</span><span class="field-value" id="p1-lbl-rev">80 000 €</span></div>
+              <input type="range" id="p1-revenu" min="20000" max="300000" step="1000" value="80000" oninput="p1update()">
+              <div class="field-hint">Case 1AJ · Déclaration 2042</div>
+            </div>
+            <div class="field">
+              <label class="field-label" style="display:block;margin-bottom:6px;">Tranche marginale d'imposition</label>
+              <select id="p1-tmi" onchange="p1update()">
+                <option value="0">Non imposable (0 %)</option>
+                <option value="11">Tranche 11 %</option>
+                <option value="30" selected>Tranche 30 %</option>
+                <option value="41">Tranche 41 %</option>
+                <option value="45">Tranche 45 %</option>
+              </select>
+              <div class="field-hint">Art. 197 CGI · Barème IR 2026</div>
+            </div>
+            <div class="field">
+              <div class="field-row"><span class="field-label">Versement annuel envisagé</span><span class="field-value" id="p1-lbl-vers">8 000 €</span></div>
+              <input type="range" id="p1-versement" min="500" max="50000" step="500" value="8000" oninput="p1update()">
+              <div class="field-hint" id="p1-hint-plaf">Plafond légal estimé : 8 000 €</div>
+            </div>
+            <div class="field">
+              <div class="field-row"><span class="field-label">Âge actuel</span><span class="field-value" id="p1-lbl-age">40 ans</span></div>
+              <input type="range" id="p1-age" min="18" max="65" step="1" value="40" oninput="p1update()">
+            </div>
+            <div class="field">
+              <div class="field-row"><span class="field-label">Horizon d'investissement</span><span class="field-value" id="p1-lbl-hor">20 ans</span></div>
+              <input type="range" id="p1-horizon" min="3" max="42" step="1" value="20" oninput="p1update()">
+            </div>
+            <div class="field">
+              <div class="field-row"><span class="field-label">Hypothèse de rendement</span><span class="field-value" id="p1-lbl-taux">4.5 %</span></div>
+              <input type="range" id="p1-taux" min="1" max="10" step="0.5" value="4.5" oninput="p1update()">
+              <div class="field-hint">Indicatif — performances non garanties · AMF</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div>
+        <div class="highlight">
+          <div class="hl-label">Économie fiscale annuelle</div>
+          <div class="hl-value" id="p1-eco">2 400 €</div>
+          <div class="hl-sub" id="p1-eco-sub">soit 30 % de réduction d'impôt</div>
+        </div>
+        <div class="grid-2" style="margin-bottom:12px;">
+          <div class="stat-card accent">
+            <div class="stat-label">Effort net réel</div>
+            <div class="stat-value blue" id="p1-effort">5 600 €</div>
+            <div class="stat-sub" id="p1-mensuel">467 €/mois</div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-label">Capital projeté</div>
+            <div class="stat-value blue" id="p1-cap">247 000 €</div>
+            <div class="stat-sub" id="p1-age-ret">à 60 ans</div>
+          </div>
+        </div>
+        <div class="alert info" id="p1-alert-info">Versement retenu : <strong id="p1-retenu">8 000 €</strong> · Plafond légal : <strong id="p1-plafond">8 000 €</strong><br><small>Cases 6NS/6NT · Feuillet 3 déclaration 2042 · Art. 163 quatervicies CGI</small></div>
+        <div class="alert warn" id="p1-alert-warn" style="display:none;">Montant saisi > plafond. Seuls <strong id="p1-warn-ret">—</strong> seront déductibles.</div>
+
+        <div class="chart-legend">
+          <div class="leg-item"><span class="leg-dot" style="background:#02539d"></span>Capital projeté</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#ccc"></span>Versements cumulés</div>
+        </div>
+        <div class="chart-wrap"><canvas id="p1-chart"></canvas></div>
+
+        <div class="cta-band" style="margin-top:14px;">
+          <p>Votre épargne mérite une stratégie. Nos conseillers analysent votre situation en détail.</p>
+          <a href="mailto:contact@aurion-patrimoine.fr" class="btn btn-primary">Prendre rendez-vous →</a>
+        </div>
+        <p class="disclaimer">Simulation indicative · Art. 163 quatervicies CGI · Fiscalité sortie non intégrée · Aurion Patrimoine · Ne constitue pas un conseil en investissement au sens MIF 2</p>
+      </div>
+    </div>
+
+    <!-- Bilan -->
+    <div class="card">
+      <div class="card-header"><h2>Bilan sur la durée totale</h2></div>
+      <div class="card-body">
+        <div class="grid-3">
+          <div class="stat-card"><div class="stat-label">Total versé</div><div class="stat-value" id="p1-total-verse">160 000 €</div><div class="stat-sub" id="p1-total-sub">sur 20 ans</div></div>
+          <div class="stat-card accent"><div class="stat-label">Total économisé (impôts)</div><div class="stat-value blue" id="p1-total-eco">48 000 €</div><div class="stat-sub">sur la durée</div></div>
+          <div class="stat-card"><div class="stat-label">Effort net cumulé</div><div class="stat-value" id="p1-total-effort">112 000 €</div><div class="stat-sub">déboursés réellement</div></div>
+          <div class="stat-card accent"><div class="stat-label">Capital final</div><div class="stat-value blue" id="p1-total-cap">247 000 €</div><div class="stat-sub" id="p1-total-mult">× 1.5 vos versements</div></div>
+          <div class="stat-card"><div class="stat-label">Plus-value</div><div class="stat-value green" id="p1-total-pv">87 000 €</div><div class="stat-sub">intérêts capitalisés</div></div>
+          <div class="stat-card"><div class="stat-label">Âge retraite estimé</div><div class="stat-value" id="p1-total-age">60 ans</div><div class="stat-sub">horizon choisi</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  PAGE 2 : COMPARATEUR                          -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-comparateur">
+  <div style="max-width:900px;margin:0 auto;padding-top:8px;">
+
+    <div class="card">
+      <div class="card-header"><h2>Paramètres de simulation</h2></div>
+      <div class="card-body">
+        <div class="grid-3">
+          <div class="field">
+            <div class="field-row"><span class="field-label">Versement mensuel</span><span class="field-value" id="c-lbl-vers">300 €</span></div>
+            <input type="range" id="c-vers" min="50" max="5000" step="50" value="300" oninput="cupdate()">
+          </div>
+          <div class="field">
+            <div class="field-row"><span class="field-label">Durée</span><span class="field-value" id="c-lbl-dur">20 ans</span></div>
+            <input type="range" id="c-dur" min="3" max="40" step="1" value="20" oninput="cupdate()">
+          </div>
+          <div class="field">
+            <label class="field-label" style="display:block;margin-bottom:6px;">Tranche d'imposition</label>
+            <select id="c-tmi" onchange="cupdate()">
+              <option value="0">Non imposable</option>
+              <option value="11">TMI 11 %</option>
+              <option value="30" selected>TMI 30 %</option>
+              <option value="41">TMI 41 %</option>
+              <option value="45">TMI 45 %</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <div class="sec-label">Profil de gestion — PER</div>
+            <div class="profile-tabs" id="c-tabs-per">
+              <button class="ptab active-blue" onclick="cSetProfil('per','defensif',this)">Défensif 3–4 %</button>
+              <button class="ptab" onclick="cSetProfil('per','equilibre',this)">Équilibré 6–6,5 %</button>
+              <button class="ptab" onclick="cSetProfil('per','dynamique',this)">Dynamique 9–10 %</button>
+            </div>
+          </div>
+          <div>
+            <div class="sec-label">Profil de gestion — Assurance-vie</div>
+            <div class="profile-tabs" id="c-tabs-av">
+              <button class="ptab active-green" onclick="cSetProfil('av','defensif',this)">Défensif 3–4 %</button>
+              <button class="ptab" onclick="cSetProfil('av','equilibre',this)">Équilibré 6–6,5 %</button>
+              <button class="ptab" onclick="cSetProfil('av','dynamique',this)">Dynamique 9–10 %</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prod-cards" id="c-cards"></div>
+
+    <div class="card">
+      <div class="card-header"><h2>Projection du capital dans le temps</h2></div>
+      <div class="card-body">
+        <div class="chart-legend">
+          <div class="leg-item"><span class="leg-dot" style="background:#02539d"></span>PER</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#1D9E75"></span>Assurance-vie</div>
+          <div class="leg-item"><span class="leg-dot" style="background:#B4B2A9"></span>Livret A · 1,5 % (plafonné 22 950 €)</div>
+        </div>
+        <div class="chart-wrap"><canvas id="c-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Analyse multicritères</h2></div>
+      <div class="card-body">
+        <div class="crit-head">
+          <div></div>
+          <div class="crit-head-lbl" style="color:#02539d">PER</div>
+          <div class="crit-head-lbl" style="color:#1D9E75">Assur.-vie</div>
+          <div class="crit-head-lbl" style="color:#888">Livret A</div>
+        </div>
+        <div id="c-crit"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Recommandation par profil</h2></div>
+      <div class="card-body">
+        <div class="profile-tabs" id="c-adv-tabs">
+          <button class="ptab active-blue" onclick="cSetAdv('jeune',this)">Jeune actif</button>
+          <button class="ptab" onclick="cSetAdv('cadre',this)">Cadre 40-55 ans</button>
+          <button class="ptab" onclick="cSetAdv('retraite',this)">Proche retraite</button>
+          <button class="ptab" onclick="cSetAdv('prudent',this)">Profil prudent</button>
+        </div>
+        <div class="adv-cards" id="c-adv"></div>
+      </div>
+    </div>
+
+    <div class="cta-band">
+      <p>Ces simulations sont indicatives. Nos conseillers Aurion Patrimoine construisent une stratégie sur mesure adaptée à votre situation réelle.</p>
+      <a href="mailto:contact@aurion-patrimoine.fr" class="btn btn-primary">Stratégie personnalisée →</a>
+    </div>
+    <p class="disclaimer">Simulation indicative · Aurion Patrimoine · Livret A plafonné 22 950 € · 1,5 %/an · Rendements non garantis · Ne constitue pas un conseil en investissement · 2026</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  PAGE 3 : CAPACITÉ ÉPARGNE                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-epargne">
+  <div style="max-width:700px;margin:0 auto;padding-top:8px;">
+
+    <!-- Steps -->
+    <div class="steps">
+      <div class="step-dot active" id="sdot-1">1</div>
+      <div class="step-line"></div>
+      <div class="step-dot" id="sdot-2">2</div>
+      <div class="step-line"></div>
+      <div class="step-dot" id="sdot-3">3</div>
+      <div class="step-line"></div>
+      <div class="step-dot" id="sdot-4">✓</div>
+    </div>
+    <div class="step-labels">
+      <div class="step-lbl active" id="slbl-1">Revenus</div>
+      <div class="step-lbl" id="slbl-2">Charges fixes</div>
+      <div class="step-lbl" id="slbl-3">Vie courante</div>
+      <div class="step-lbl" id="slbl-4">Résultats</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="ep-step-1">
+      <div class="card">
+        <div class="card-header"><h2>Vos revenus mensuels nets</h2><p>Avant toute épargne</p></div>
+        <div class="card-body">
+          <div class="field">
+            <div class="field-row"><span class="field-label">Salaire net mensuel</span><span class="field-value" id="e-lbl-sal">3 000 €</span></div>
+            <input type="range" id="e-sal" min="1000" max="20000" step="100" value="3000" oninput="eUpdLbl('e-sal','e-lbl-sal')">
+          </div>
+          <div class="field">
+            <div class="field-row"><span class="field-label">Revenus complémentaires</span><span class="field-value" id="e-lbl-compl">0 €</span></div>
+            <input type="range" id="e-compl" min="0" max="5000" step="100" value="0" oninput="eUpdLbl('e-compl','e-lbl-compl')">
+            <div class="field-hint">Loyers, dividendes, freelance…</div>
+          </div>
+          <div class="field">
+            <label class="field-label" style="display:block;margin-bottom:6px;">Situation</label>
+            <select id="e-sit">
+              <option value="1">Célibataire / seul(e)</option>
+              <option value="2">En couple (2 revenus)</option>
+              <option value="1.5">En couple (1 revenu)</option>
+            </select>
+          </div>
+          <div class="alert info">Revenu total estimé : <strong id="e-total-rev">3 000 €</strong>/mois</div>
+          <button class="btn btn-primary btn-full" onclick="eGoStep(2)">Continuer →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="ep-step-2" style="display:none;">
+      <div class="card">
+        <div class="card-header"><h2>Vos charges fixes mensuelles</h2><p>Ce que vous payez quoi qu'il arrive</p></div>
+        <div class="card-body">
+          <div class="charge-grid">
+            <div class="charge-item"><label>Loyer / crédit immo</label><input type="number" id="cf-loyer" value="900" min="0"></div>
+            <div class="charge-item"><label>Crédits consommation</label><input type="number" id="cf-credit" value="0" min="0"></div>
+            <div class="charge-item"><label>Mutuelle / assurances</label><input type="number" id="cf-assur" value="80" min="0"></div>
+            <div class="charge-item"><label>Abonnements</label><input type="number" id="cf-abo" value="60" min="0"></div>
+            <div class="charge-item"><label>Transports</label><input type="number" id="cf-transp" value="150" min="0"></div>
+            <div class="charge-item"><label>Impôts mensualisés</label><input type="number" id="cf-impots" value="100" min="0"></div>
+          </div>
+          <div class="alert info">Total charges fixes : <strong id="e-total-fix">1 290 €</strong>/mois</div>
+          <div class="btn-row">
+            <button class="btn-back" onclick="eGoStep(1)">← Retour</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="eGoStep(3)">Continuer →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="ep-step-3" style="display:none;">
+      <div class="card">
+        <div class="card-header"><h2>Vos dépenses de vie courante</h2><p>Soyez honnête, c'est pour vous</p></div>
+        <div class="card-body">
+          <div class="charge-grid">
+            <div class="charge-item"><label>Alimentation / courses</label><input type="number" id="cv-alim" value="400" min="0"></div>
+            <div class="charge-item"><label>Restaurants / sorties</label><input type="number" id="cv-resto" value="150" min="0"></div>
+            <div class="charge-item"><label>Vêtements / shopping</label><input type="number" id="cv-shop" value="100" min="0"></div>
+            <div class="charge-item"><label>Loisirs / sport</label><input type="number" id="cv-loisir" value="100" min="0"></div>
+            <div class="charge-item"><label>Vacances (mensualité)</label><input type="number" id="cv-vac" value="100" min="0"></div>
+            <div class="charge-item"><label>Divers / imprévus</label><input type="number" id="cv-divers" value="100" min="0"></div>
+          </div>
+          <div class="alert info">Total dépenses courantes : <strong id="e-total-var">950 €</strong>/mois</div>
+          <div class="btn-row">
+            <button class="btn-back" onclick="eGoStep(2)">← Retour</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="eCalcShow()">Voir mes résultats →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 : Results -->
+    <div id="ep-step-4" style="display:none;">
+      <div class="ring-wrap">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#e8e8e5" stroke-width="9"/>
+          <circle id="e-ring" cx="50" cy="50" r="40" fill="none" stroke="#02539d" stroke-width="9" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" id="e-ring-pct">0%</div>
+          <div class="ring-lbl">épargne</div>
+        </div>
+      </div>
+
+      <div class="highlight">
+        <div class="hl-label">Capacité d'épargne mensuelle</div>
+        <div class="hl-value" id="e-cap">760 €</div>
+        <div class="hl-sub" id="e-sub">sur un revenu de 3 000 €</div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div class="stat-card"><div class="stat-label">Revenus</div><div class="stat-value" id="e-r-rev">3 000 €</div><div class="stat-sub">nets / mois</div></div>
+        <div class="stat-card"><div class="stat-label">Dépenses totales</div><div class="stat-value" id="e-r-dep">2 240 €</div><div class="stat-sub">fixes + courantes</div></div>
+        <div class="stat-card accent"><div class="stat-label">Reste à épargner</div><div class="stat-value blue" id="e-r-reste">760 €</div><div class="stat-sub">par mois</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:6px;"><span>Répartition de votre budget</span><span id="e-bb-total">3 000 €</span></div>
+          <div class="budget-track">
+            <div class="budget-seg" id="e-seg-fix" style="background:#02539d;width:43%"></div>
+            <div class="budget-seg" id="e-seg-var" style="background:#5aafff;width:32%"></div>
+            <div class="budget-seg" id="e-seg-ep" style="background:#1D9E75;width:25%"></div>
+          </div>
+          <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;">
+            <div class="leg-item"><span class="leg-dot" style="background:#02539d"></span>Charges fixes <span id="e-leg-fix" style="font-weight:600;margin-left:3px;"></span></div>
+            <div class="leg-item"><span class="leg-dot" style="background:#5aafff"></span>Vie courante <span id="e-leg-var" style="font-weight:600;margin-left:3px;"></span></div>
+            <div class="leg-item"><span class="leg-dot" style="background:#1D9E75"></span>Épargne <span id="e-leg-ep" style="font-weight:600;margin-left:3px;"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="e-advice"></div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-header"><h2>Si vous investissez ce montant chaque mois</h2></div>
+        <div class="card-body">
+          <div class="grid-3" id="e-proj"></div>
+        </div>
+      </div>
+
+      <div class="cta-band">
+        <p>Vous avez une capacité d'épargne réelle. Nos conseillers peuvent vous aider à la faire travailler intelligemment.</p>
+        <a href="mailto:contact@aurion-patrimoine.fr" class="btn btn-primary">Optimiser mon épargne →</a>
+      </div>
+
+      <button class="btn btn-outline btn-full" style="margin-top:12px;" onclick="eGoStep(1)">← Recommencer</button>
+      <p class="disclaimer">Simulation indicative · Aurion Patrimoine · Conseil en gestion de patrimoine indépendant · 2026</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>Aurion Patrimoine</strong> — Conseil en gestion de patrimoine indépendant<br>
+  Simulation indicative · Ne constitue pas un conseil en investissement au sens de la réglementation MIF 2<br>
+  Les performances passées ne garantissent pas les résultats futurs · 2026<br>
+  <a href="mailto:contact@aurion-patrimoine.fr" style="color:rgba(255,255,255,0.4);margin-top:6px;display:inline-block;">contact@aurion-patrimoine.fr</a>
+</footer>
+
+<script>
+/* ════════════════════════════════════════
+   UTILS
+════════════════════════════════════════ */
+const fmt = n => Math.round(n).toLocaleString('fr-FR') + ' €';
+const fmtK = n => { const v=Math.round(n); return v>=1000?Math.round(v/1000)+'k€':v+'€'; };
+const pct = (a,b) => b>0?Math.round(a/b*100):0;
+const PLAFOND_LA = 22950;
+
+/* ════════════════════════════════════════
+   NAV
+════════════════════════════════════════ */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ════════════════════════════════════════
+   PAGE 1 — PER
+════════════════════════════════════════ */
+let p1chart;
+function p1update() {
+  const rev = +document.getElementById('p1-revenu').value;
+  const tmi = +document.getElementById('p1-tmi').value/100;
+  const vers = +document.getElementById('p1-versement').value;
+  const age = +document.getElementById('p1-age').value;
+  const hor = +document.getElementById('p1-horizon').value;
+  const taux = +document.getElementById('p1-taux').value/100;
+
+  document.getElementById('p1-lbl-rev').textContent = fmt(rev);
+  document.getElementById('p1-lbl-vers').textContent = fmt(vers);
+  document.getElementById('p1-lbl-age').textContent = age+' ans';
+  document.getElementById('p1-lbl-hor').textContent = hor+' ans';
+  document.getElementById('p1-lbl-taux').textContent = parseFloat(document.getElementById('p1-taux').value).toFixed(1)+' %';
+
+  const plafond = Math.min(Math.max(rev*0.10,4399),35194);
+  const retenu = Math.min(vers,plafond);
+  const eco = retenu*tmi;
+  const effort = retenu-eco;
+  const mensuel = effort/12;
+  const ageRet = age+hor;
+  const r = taux/12, n=hor*12;
+  const cap = retenu*((Math.pow(1+r,n)-1)/r)*(1+r);
+  const totalVerse = retenu*hor;
+  const totalEco = eco*hor;
+  const pv = cap-totalVerse;
+
+  document.getElementById('p1-eco').textContent = fmt(Math.round(eco));
+  document.getElementById('p1-eco-sub').textContent = 'soit '+(tmi*100).toFixed(0)+' % de réduction d\'impôt';
+  document.getElementById('p1-effort').textContent = fmt(Math.round(effort));
+  document.getElementById('p1-mensuel').textContent = Math.round(mensuel).toLocaleString('fr-FR')+' €/mois';
+  document.getElementById('p1-cap').textContent = fmt(Math.round(cap));
+  document.getElementById('p1-age-ret').textContent = 'à '+ageRet+' ans';
+  document.getElementById('p1-retenu').textContent = fmt(Math.round(retenu));
+  document.getElementById('p1-plafond').textContent = fmt(Math.round(plafond));
+  document.getElementById('p1-hint-plaf').textContent = 'Plafond légal estimé : '+fmt(Math.round(plafond));
+
+  const over = vers>plafond;
+  document.getElementById('p1-alert-info').style.display = over?'none':'block';
+  document.getElementById('p1-alert-warn').style.display = over?'block':'none';
+  if(over) document.getElementById('p1-warn-ret').textContent = fmt(Math.round(plafond));
+
+  document.getElementById('p1-total-verse').textContent = fmt(Math.round(totalVerse));
+  document.getElementById('p1-total-sub').textContent = 'sur '+hor+' ans';
+  document.getElementById('p1-total-eco').textContent = fmt(Math.round(totalEco));
+  document.getElementById('p1-total-effort').textContent = fmt(Math.round(totalVerse-totalEco));
+  document.getElementById('p1-total-cap').textContent = fmt(Math.round(cap));
+  document.getElementById('p1-total-mult').textContent = '× '+(totalVerse>0?(cap/totalVerse).toFixed(1):'-')+' vos versements';
+  document.getElementById('p1-total-pv').textContent = fmt(Math.round(pv));
+  document.getElementById('p1-total-age').textContent = ageRet+' ans';
+
+  // Chart
+  const step=Math.max(1,Math.floor(hor/12));
+  const labels=[],dCap=[],dVerse=[];
+  for(let y=0;y<=hor;y+=step){
+    labels.push(y===0?'Auj.':y+'ans');
+    const ni=y*12;
+    dCap.push(Math.round(retenu*((Math.pow(1+r,ni)-1)/r)*(1+r)));
+    dVerse.push(Math.round(retenu*y));
+  }
+  if(labels[labels.length-1]!==hor+'ans'){ labels.push(hor+'ans'); dCap.push(Math.round(cap)); dVerse.push(Math.round(totalVerse)); }
+
+  if(p1chart){ p1chart.data.labels=labels; p1chart.data.datasets[0].data=dCap; p1chart.data.datasets[1].data=dVerse; p1chart.update('none'); return; }
+  p1chart=new Chart(document.getElementById('p1-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Capital',data:dCap,borderColor:'#02539d',backgroundColor:'rgba(2,83,157,0.07)',borderWidth:2.5,fill:true,tension:0.4,pointRadius:0,pointHoverRadius:4},
+      {label:'Versements',data:dVerse,borderColor:'#ccc',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],fill:false,tension:0,pointRadius:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#000',bodyColor:'#5aafff',borderColor:'rgba(2,83,157,0.4)',borderWidth:1,padding:10,callbacks:{label:ctx=>ctx.dataset.label+' : '+Math.round(ctx.parsed.y).toLocaleString('fr-FR')+' €'}}},scales:{x:{ticks:{color:'#aaa',font:{size:10},maxRotation:0},grid:{color:'rgba(0,0,0,0.05)'}},y:{ticks:{color:'#aaa',font:{size:10},callback:v=>fmtK(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+/* ════════════════════════════════════════
+   PAGE 2 — COMPARATEUR
+════════════════════════════════════════ */
+const C_PROFILS={
+  defensif:{taux:0.035},
+  equilibre:{taux:0.0625},
+  dynamique:{taux:0.095}
+};
+const C_ADV={
+  jeune:{per:60,av:30,la:10,pw:'Horizon long + TMI croissante = avantage fiscal PER maximal.',aw:'Complément souple, accessible avant la retraite.',lw:'Réserve de précaution uniquement (3 mois de charges max).',rp:true},
+  cadre:{per:50,av:40,la:10,pw:'TMI élevée = économie fiscale importante sur 10-15 ans.',aw:'Souplesse + optimisation successorale via clause bénéficiaire.',lw:'Liquidité court terme. Plafond 22 950 € vite atteint.',rp:true},
+  retraite:{per:15,av:65,la:20,pw:'Horizon court. Pertinent si TMI élevée et > 5 ans.',aw:'Meilleur compromis : rendement, fiscalité douce, transmission.',lw:'Sécurité pour dépenses imprévues.',ra:true},
+  prudent:{per:30,av:40,la:30,pw:'Fonds euros sécurisés en PER : avantage fiscal sans risque élevé.',aw:'Fonds euros garanti + UC progressif.',lw:'Part justifiée — attention au plafond 22 950 €.',ra:true}
+};
+let cPer='defensif', cAv='defensif', cAdv='jeune', cchart;
+
+function calcLivretA(versM,durAns){
+  const r=0.015/12; let cap=0,tv=0,sat=false,mSat=null;
+  for(let m=1;m<=durAns*12;m++){
+    if(cap<PLAFOND_LA){const ve=Math.min(versM,PLAFOND_LA-cap);cap+=ve;tv+=ve;if(cap>=PLAFOND_LA&&!sat){sat=true;mSat=m;}}
+    cap*=(1+r);
+  }
+  return{cap:Math.round(cap),tv:Math.round(tv),sat,mSat};
+}
+function calcLaY(versM,yr){
+  const r=0.015/12;let cap=0;
+  for(let m=1;m<=yr*12;m++){if(cap<PLAFOND_LA){const ve=Math.min(versM,PLAFOND_LA-cap);cap+=ve;}cap*=(1+r);}
+  return Math.round(cap);
+}
+function calcCap(versM,durAns,tAnnuel){
+  const r=tAnnuel/12,n=durAns*12;
+  if(r===0)return versM*n;
+  return versM*((Math.pow(1+r,n)-1)/r)*(1+r);
+}
+
+function cSetProfil(prod,key,el){
+  if(prod==='per'){cPer=key;document.querySelectorAll('#c-tabs-per .ptab').forEach(t=>t.classList.remove('active-blue'));el.classList.add('active-blue');}
+  else{cAv=key;document.querySelectorAll('#c-tabs-av .ptab').forEach(t=>t.classList.remove('active-green'));el.classList.add('active-green');}
+  cupdate();
+}
+function cSetAdv(key,el){
+  cAdv=key;
+  document.querySelectorAll('#c-adv-tabs .ptab').forEach(t=>t.classList.remove('active-blue'));
+  el.classList.add('active-blue');
+  cRenderAdv();
+}
+
+function cupdate(){
+  const vers=+document.getElementById('c-vers').value;
+  const dur=+document.getElementById('c-dur').value;
+  const tmi=+document.getElementById('c-tmi').value/100;
+  document.getElementById('c-lbl-vers').textContent=fmt(vers);
+  document.getElementById('c-lbl-dur').textContent=dur+' ans';
+
+  const tP=C_PROFILS[cPer].taux, tA=C_PROFILS[cAv].taux;
+  const capPer=calcCap(vers,dur,tP);
+  const capAv=calcCap(vers,dur,tA);
+  const laRes=calcLivretA(vers,dur);
+  const capLa=laRes.cap;
+  const totalVerse=vers*12*dur;
+  const pvAv=Math.max(0,capAv-totalVerse);
+  const netAv=capAv-(pvAv*0.172);
+  const vAnnuel=vers*12;
+  const plafPer=Math.min(Math.max(vAnnuel*0.10,4399),35194);
+  const retenu=Math.min(vAnnuel,plafPer);
+  const ecoCum=retenu*tmi*dur;
+  const effortN=totalVerse-ecoCum;
+  const ansSat=laRes.mSat?(laRes.mSat/12).toFixed(1):null;
+  const winner=capPer>=netAv&&capPer>=capLa?'per':netAv>=capLa?'av':'la';
+
+  const perLabel=['Défensif','Équilibré','Dynamique'][['defensif','equilibre','dynamique'].indexOf(cPer)];
+  const avLabel=['Défensif','Équilibré','Dynamique'][['defensif','equilibre','dynamique'].indexOf(cAv)];
+  const perRange=['3–4 %','6–6,5 %','9–10 %'][['defensif','equilibre','dynamique'].indexOf(cPer)];
+  const avRange=['3–4 %','6–6,5 %','9–10 %'][['defensif','equilibre','dynamique'].indexOf(cAv)];
+
+  const laWarn=laRes.sat?`<div class="la-warn">Plafond 22 950 € atteint après ${ansSat} ans — versements bloqués, intérêts continuent.</div>`:'';
+  const laVers=laRes.sat?`${fmt(laRes.tv)} (arrêt à ${ansSat} ans)`:fmt(laRes.tv);
+
+  const cards=[
+    {id:'per',name:'PER',color:'#02539d',bg:'rgba(2,83,157,0.06)',sub:'Plan Épargne Retraite · '+perLabel,rate:perRange+' /an',
+     stats:[{l:'Capital projeté',v:fmt(Math.round(capPer)),c:''},{l:'Éco. fiscale cumulée',v:fmt(Math.round(ecoCum)),c:'good'},{l:'Effort réel net',v:fmt(Math.round(effortN)),c:'blue'},{l:'Disponibilité',v:'Retraite',c:'warn'},{l:'Plafond/an',v:fmt(Math.round(plafPer)),c:''}],
+     big:fmt(Math.round(capPer)),bigLbl:'Capital à terme',winner:winner==='per',extra:''},
+    {id:'av',name:'Assurance-vie',color:'#1D9E75',bg:'rgba(29,158,117,0.06)',sub:'Multisupport · '+avLabel,rate:avRange+' /an',
+     stats:[{l:'Capital brut',v:fmt(Math.round(capAv)),c:''},{l:'Fiscalité PFU 17,2 %',v:'– '+fmt(Math.round(pvAv*0.172)),c:'warn'},{l:'Capital net',v:fmt(Math.round(netAv)),c:'good'},{l:'Disponibilité',v:'À tout moment',c:'good'},{l:'Plafond',v:'Aucun',c:'good'}],
+     big:fmt(Math.round(netAv)),bigLbl:'Capital net de fiscalité',winner:winner==='av',extra:''},
+    {id:'la',name:'Livret A',color:'#888780',bg:'rgba(136,135,128,0.06)',sub:'Épargne réglementée',rate:'1,5 % /an',
+     stats:[{l:'Total versé',v:laVers,c:laRes.sat?'warn':''},{l:'Plafond légal',v:'22 950 €',c:'warn'},{l:'Capital final',v:fmt(capLa),c:''},{l:'Fiscalité',v:'Exonéré',c:'good'},{l:'Disponibilité',v:'Immédiate',c:'good'}],
+     big:fmt(capLa),bigLbl:'Capital net',winner:winner==='la',extra:laWarn},
+  ];
+
+  document.getElementById('c-cards').innerHTML=cards.map(c=>`
+    <div class="prod-card ${c.winner?'winner':''}">
+      <div class="prod-head" style="background:${c.bg}">
+        <div class="prod-icon" style="background:${c.color}20;color:${c.color}">${c.id==='la'?'LA':c.id.toUpperCase()}</div>
+        <div class="prod-name">${c.name}</div>
+        <div class="prod-sub">${c.sub}</div>
+        <div class="prod-rate" style="color:${c.color}">${c.rate}</div>
+        ${c.winner?'<div class="winner-badge">Meilleur capital</div>':''}
+      </div>
+      <div class="prod-stats">${c.stats.map(s=>`<div class="ps-row"><span class="ps-lbl">${s.l}</span><span class="ps-val ${s.c}">${s.v}</span></div>`).join('')}</div>
+      ${c.extra}
+      <div class="prod-big"><div class="pb-label">${c.bigLbl}</div><div class="pb-val" style="color:${c.color}">${c.big}</div></div>
+    </div>
+  `).join('');
+
+  // Criteria
+  const rPS=cPer==='dynamique'?95:cPer==='equilibre'?70:40;
+  const rAS=cAv==='dynamique'?95:cAv==='equilibre'?70:40;
+  const fiPS=tmi>=0.30?90:tmi>=0.11?60:20;
+  const criteria=[
+    {n:'Rendement potentiel',per:rPS,av:rAS,la:10,lac:'#E24B4A'},
+    {n:'Avantage fiscal',per:fiPS,av:50,la:10,lac:'#E24B4A'},
+    {n:'Flexibilité',per:20,av:85,la:10,lac:'#E24B4A'},
+    {n:'Sécurité capital',per:cPer==='defensif'?82:cPer==='equilibre'?55:32,av:cAv==='defensif'?82:cAv==='equilibre'?55:32,la:100,lac:'#888780'},
+    {n:'Transmission',per:50,av:90,la:20,lac:'#888780'},
+    {n:'Capacité versements',per:100,av:100,la:15,lac:'#E24B4A'},
+  ];
+  document.getElementById('c-crit').innerHTML=criteria.map(c=>`
+    <div class="crit-row">
+      <div class="crit-name">${c.n}</div>
+      <div class="bar-wrap"><div class="bar-track"><div class="bar-fill" style="width:${c.per}%;background:#02539d"></div></div><span class="bar-num" style="color:#02539d">${c.per}</span></div>
+      <div class="bar-wrap"><div class="bar-track"><div class="bar-fill" style="width:${c.av}%;background:#1D9E75"></div></div><span class="bar-num" style="color:#1D9E75">${c.av}</span></div>
+      <div class="bar-wrap"><div class="bar-track"><div class="bar-fill" style="width:${c.la}%;background:${c.lac}"></div></div><span class="bar-num" style="color:${c.lac}">${c.la}</span></div>
+    </div>
+  `).join('');
+
+  // Chart
+  const step=Math.max(1,Math.floor(dur/14));
+  const lb=[],dP=[],dA=[],dL=[];
+  for(let y=0;y<=dur;y+=step){
+    lb.push(y===0?'Auj.':y+' ans');
+    dP.push(Math.round(calcCap(vers,y,tP)));
+    dA.push(Math.round(calcCap(vers,y,tA)));
+    dL.push(calcLaY(vers,y));
+  }
+  if(lb[lb.length-1]!==dur+' ans'){lb.push(dur+' ans');dP.push(Math.round(capPer));dA.push(Math.round(capAv));dL.push(capLa);}
+  if(cchart){cchart.data.labels=lb;cchart.data.datasets[0].data=dP;cchart.data.datasets[1].data=dA;cchart.data.datasets[2].data=dL;cchart.update('none');return;}
+  cchart=new Chart(document.getElementById('c-chart'),{type:'line',data:{labels:lb,datasets:[
+    {label:'PER',data:dP,borderColor:'#02539d',backgroundColor:'rgba(2,83,157,0.07)',borderWidth:2.5,fill:true,tension:0.4,pointRadius:0,pointHoverRadius:4},
+    {label:'AV',data:dA,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.05)',borderWidth:2,fill:true,tension:0.4,pointRadius:0,pointHoverRadius:4},
+    {label:'LA',data:dL,borderColor:'#B4B2A9',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],fill:false,tension:0,pointRadius:0,pointHoverRadius:3}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#000',bodyColor:'#5aafff',borderColor:'rgba(2,83,157,0.4)',borderWidth:1,padding:10,callbacks:{label:ctx=>ctx.dataset.label+' : '+Math.round(ctx.parsed.y).toLocaleString('fr-FR')+' €'}}},scales:{x:{ticks:{color:'#aaa',font:{size:10},maxRotation:0},grid:{color:'rgba(0,0,0,0.05)'}},y:{ticks:{color:'#aaa',font:{size:10},callback:v=>fmtK(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}}); 
+  cRenderAdv();
+}
+
+function cRenderAdv(){
+  const p=C_ADV[cAdv];
+  const prods=[
+    {name:'PER',color:'#02539d',pct:p.per,why:p.pw,rec:!!p.rp},
+    {name:'Assurance-vie',color:'#1D9E75',pct:p.av,why:p.aw,rec:!!p.ra},
+    {name:'Livret A',color:'#888780',pct:p.la,why:p.lw,rec:false},
+  ];
+  document.getElementById('c-adv').innerHTML=prods.map(pr=>`
+    <div class="adv-card ${pr.rec?'priority':''}">
+      <div class="adv-prod">${pr.name}${pr.rec?'<span class="priority-badge">Priorité</span>':''}</div>
+      <div class="adv-pct" style="color:${pr.color}">${pr.pct} %</div>
+      <div class="adv-pct-sub">de votre épargne</div>
+      <div class="adv-bar"><div style="height:100%;width:${pr.pct}%;background:${pr.color};border-radius:2px;"></div></div>
+      <div class="adv-why">${pr.why}</div>
+    </div>
+  `).join('');
+}
+
+/* ════════════════════════════════════════
+   PAGE 3 — ÉPARGNE
+════════════════════════════════════════ */
+function eUpdLbl(id,lbl){
+  const v=+document.getElementById(id).value;
+  document.getElementById(lbl).textContent=fmt(v);
+  const sal=+document.getElementById('e-sal').value;
+  const compl=+document.getElementById('e-compl').value;
+  document.getElementById('e-total-rev').textContent=fmt(sal+compl);
+}
+
+function eGetFix(){
+  return ['cf-loyer','cf-credit','cf-assur','cf-abo','cf-transp','cf-impots'].reduce((s,id)=>s+(+document.getElementById(id).value||0),0);
+}
+function eGetVar(){
+  return ['cv-alim','cv-resto','cv-shop','cv-loisir','cv-vac','cv-divers'].reduce((s,id)=>s+(+document.getElementById(id).value||0),0);
+}
+
+function eGoStep(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('ep-step-'+i).style.display=i===n?'block':'none';
+    const dot=document.getElementById('sdot-'+i);
+    const lbl=document.getElementById('slbl-'+i);
+    dot.classList.remove('active','done');
+    if(lbl){lbl.classList.remove('active');}
+    if(i===n){dot.classList.add('active');if(lbl)lbl.classList.add('active');}
+    else if(i<n){dot.classList.add('done');}
+  });
+  if(n===2) document.getElementById('e-total-fix').textContent=fmt(eGetFix());
+  if(n===3) document.getElementById('e-total-var').textContent=fmt(eGetVar());
+  window.scrollTo(0,0);
+}
+
+function eCalcShow(){
+  const rev=+document.getElementById('e-sal').value + +document.getElementById('e-compl').value;
+  const fix=eGetFix(), varr=eGetVar();
+  const dep=fix+varr;
+  const cap=Math.max(0,rev-dep);
+  const tEp=pct(cap,rev), tFix=pct(fix,rev), tVar=pct(varr,rev);
+
+  document.getElementById('e-cap').textContent=fmt(cap);
+  document.getElementById('e-sub').textContent='sur un revenu de '+fmt(rev);
+  document.getElementById('e-r-rev').textContent=fmt(rev);
+  document.getElementById('e-r-dep').textContent=fmt(dep);
+  document.getElementById('e-r-reste').textContent=fmt(cap);
+  document.getElementById('e-bb-total').textContent=fmt(rev);
+  document.getElementById('e-seg-fix').style.width=Math.min(tFix,100)+'%';
+  document.getElementById('e-seg-var').style.width=Math.min(tVar,100)+'%';
+  document.getElementById('e-seg-ep').style.width=Math.min(tEp,100)+'%';
+  document.getElementById('e-leg-fix').textContent=tFix+'%';
+  document.getElementById('e-leg-var').textContent=tVar+'%';
+  document.getElementById('e-leg-ep').textContent=tEp+'%';
+
+  const circ=2*Math.PI*40;
+  const offset=circ*(1-Math.min(tEp,100)/100);
+  const ring=document.getElementById('e-ring');
+  ring.style.strokeDashoffset=offset;
+  ring.style.stroke=tEp>=20?'#1D9E75':tEp>=10?'#02539d':'#E24B4A';
+  document.getElementById('e-ring-pct').textContent=tEp+'%';
+  document.getElementById('e-ring-pct').style.color=tEp>=20?'#1D9E75':tEp>=10?'#02539d':'#E24B4A';
+
+  let adv='';
+  if(cap<=0) adv='<div class="alert danger"><strong>Budget déficitaire</strong> — Vos dépenses dépassent vos revenus. Un conseiller peut vous aider à rééquilibrer.</div>';
+  else if(tEp<10) adv='<div class="alert warn"><strong>Capacité limitée mais réelle</strong> — Même '+fmt(cap)+'/mois bien investis font une différence sur 20 ans.</div>';
+  else if(tEp<20) adv='<div class="alert success"><strong>Bonne capacité d\'épargne</strong> — Avec '+tEp+'%, vous êtes au-dessus de la moyenne française (8%). '+fmt(cap)+'/mois bien structurés construisent un patrimoine solide.</div>';
+  else adv='<div class="alert success"><strong>Excellente capacité d\'épargne !</strong> — '+tEp+'% de taux d\'épargne. '+fmt(cap)+'/mois optimisés fiscalement peuvent transformer votre situation en 10-15 ans.</div>';
+  document.getElementById('e-advice').innerHTML=adv;
+
+  const projHTML=[5,10,20].map(h=>{
+    const r=0.045/12,n=h*12;
+    const c=cap>0?cap*((Math.pow(1+r,n)-1)/r):0;
+    return`<div class="stat-card accent"><div class="stat-label">Dans ${h} ans</div><div class="stat-value blue">${fmt(Math.round(c))}</div><div class="stat-sub">à 4,5 %/an</div></div>`;
+  }).join('');
+  document.getElementById('e-proj').innerHTML=projHTML;
+
+  eGoStep(4);
+}
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+p1update();
+cupdate();
+</script>
+</body>
+</html>
